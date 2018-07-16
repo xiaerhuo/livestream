@@ -7,10 +7,10 @@ html5 video标签支持的数据格式有：
 * Mpeg-4
 * Ogg
 * webm
+
 Video标签不能直接用来播放流媒体
 而MSE API可播放自适应的流和时变的直播流,这是因为MSE API是把video标签的src值替换成一个mediasource对象
 # media source extensions API 原理
-# media source原理
 ![media source原理](https://github.com/xiaerhuo/livestream/blob/master/mse.png)
 # fmp4直播流模拟演示
 
@@ -18,7 +18,7 @@ Video标签不能直接用来播放流媒体
 
 [再看大体积的视频流的播放](https://xiaerhuo.github.io/livestream/wsMse.html)
 
-*sourcebuffer缓存区可以存放的视频大小有限，120M左右，所以在播放比较大的视频时，需要不断的清缓存区*
+**sourcebuffer缓存区可以存放的视频大小有限，120M左右，所以在播放比较大的视频时，需要不断的清缓存区**
 
 # MP4的数据格式
 ![MP4的数据格式](https://github.com/xiaerhuo/livestream/blob/master/MP4.png)

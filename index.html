@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+    <head>
+        <title>MSE Video demo</title>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <h1>小文件直播流模拟</h1>
+        <video width="960px" height="480px" controls>autoplay controls</video>
+        
+        <script>
+            var video = document.getElementsByTagName("video")[0];
+            var wsurl = 'ws://localhost:8300/';
+            var mimeCodec = 'video/mp4; codecs="avc1.64001f, mp4a.40.2"';
+            var i=0;
+            var j = 0;//标志请求多少次数据
+            var times = 1;
+            var sourceBufferList = [];
+            var flag = false;//
+        
+            if('MediaSource' in window && MediaSource.isTypeSupported(mimeCodec)){
+                var mediaSource = new MediaSource;
+                console.log(mediaSource.readyState);
+                video.src = URL.createObjectURL(mediaSource);
+                mediaSource.addEventListener('sourceopen',sourceOpen); 
+            } else {
+                console.error('Unsupported MIME type or codec: ',mimeCodec);
+            }
+        
+            function sourceOpen(){
+                if(i!=0) return
+                i++;
+                var mediaSource = this;
+                sourceBufferList.unshift(mediaSource.addSourceBuffer(mimeCodec));
+                var sourceBuffer = sourceBufferList[0];
+                fetchMedia(wsurl,function(buf){
+                    if(buf == "end"){
+                        return
+                    }
+                    try{
+                        sourceBuffer.appendBuffer(buf);
+                    }
+                    catch(err){
+                        sourceBuffer.remove(0,240);
+                        flag = true;
+                    }
+                    // sourceBuffer.addEventListener("error",function(){
+                        
+                    // })
+                    console.log(mediaSource.readyState);
+                });
+
+                sourceBuffer.addEventListener('updateend',function(){
+                    if(flag){
+                        ws.send("on");
+                        flag = false;
+                        return
+                    }
+                    // var bufferMode = sourceBuffer.mode;
+                    // if (bufferMode == 'segments') {
+                    //     sourceBuffer.mode = 'sequence';
+                    // }
+                    mediaSource.endOfStream();
+                    // remove size;
+                        video.play(); 
+
+                    //加个sourcebuffer有没有满的判断                     
+                    if(mediaSource.readyState == "ended"){
+                //         if((j%480) == 0){
+                //     // video.play();                                   
+                //         //每发送1900次数据后，为mediasource添加新的sourcebuffer                           
+                //             setTimeout(function(){
+                //                 sourceBuffer.remove(0,10);
+                //                 flag = true;                                                          
+                //             },50000)                       
+                //         } else {
+                            ws.send("on");  
+                //         }                                               
+                    }
+                });                
+
+            };
+        
+            function fetchMedia(url,cb){
+                console.log(url);
+                ws = new WebSocket(url);
+                ws.binaryType = "arraybuffer";
+                ws.onopen = function(){
+                    ws.send("on");
+                    console.log("connected");
+                };
+                ws.onmessage = function(e){
+                    j++;
+                    cb(e.data);
+                };
+                ws.onclose = function(){
+                    console.log("closed");
+                };
+                ws.onerror = function(e){
+                    console.log(e.msg);
+                };
+            };
+        </script>
+    </body>
+</html>
